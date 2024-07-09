@@ -20,3 +20,7 @@ docker tag minio/minio:RELEASE.2023-04-20T17-56-55Z $REGISTRY/minio/minio:RELEAS
 docker push $REGISTRY/argoproj/argoexec:v3.4.3
 docker push $REGISTRY/argoproj/workflow-controller:v3.4.3
 docker push $REGISTRY/minio/minio:RELEASE.2023-04-20T17-56-55Z
+
+# kubeflow
+docker tag kubeflow/training-operator:v1-855e096 $REGISTRY/kubeflow/training-operator:v1-855e096
+docker push $REGISTRY/kubeflow/training-operator:v1-855e096
