@@ -40,7 +40,7 @@ spec:
       {{- end }}
       containers:
         - name: mysql
-          image: "{{ .Values.global.imageRegistry }}/{{ .Values.mysql.image }}:{{ .Values.mysql.tag }}"
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.mysql.image }}"
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: data

@@ -1,0 +1,102 @@
+{{ if .Values.argo.enable }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workflow-controller
+  namespace: {{ .Values.argo.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: workflow-controller
+  template:
+    metadata:
+      labels:
+        app: workflow-controller
+    spec:
+      containers:
+      - name: workflow-controller
+        command:
+        - workflow-controller
+        args:
+          - '--executor-image'
+          - argoproj/argoexec:v3.4.3
+        env:
+        - name: LEADER_ELECTION_IDENTITY
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        image: "{{ .Values.argo.image }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9090
+          name: metrics
+        - containerPort: 6060
+        {{- if .Values.argo.livenessProbe }}
+        livenessProbe:
+{{ toYaml .Values.argo.livenessProbe | indent 10 }}
+        {{- end }}
+        {{- if .Values.argo.readinessProbe }}
+        readinessProbe:
+{{ toYaml .Values.argo.readinessProbe | indent 10 }}
+        {{- end }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+      priorityClassName: workflow-controller
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: argo
+
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: workflow-controller
+value: 1000000
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflow-controller-configmap
+  namespace: {{ .Values.argo.namespace }}
+data:
+  parallelism: "1000"
+  namespaceParallelism: "1000"
+  artifactRepository: |
+    archiveLogs: true
+    s3:
+      endpoint: minio.kubeflow:9000
+      bucket: mlpipeline
+      insecure: true
+      accessKeySecret:
+        name: my-minio-cred
+        key: accesskey
+      secretKeySecret:
+        name: my-minio-cred
+        key: secretkey
+  metricsConfig: |
+    enabled: true
+    path: /metrics
+    port: 9090
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: minio
+  name: my-minio-cred
+  namespace: pipeline
+stringData:
+  accesskey: {{ .Values.argo.minio.root }}
+  secretkey: {{ .Values.argo.minio.password }}
+type: Opaque
+---
+{{- end }}

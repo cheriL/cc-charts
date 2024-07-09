@@ -12,10 +12,7 @@ mysql:
   # enable: true
   name: mysql
   namespace: infra
-   # -- Image repository
-  image: mysql
-  # -- Image tag
-  tag: 8.0.32
+  image: mysql:8.0.32
   nodeSelector: {}
   tolerations: {}
   affinity: {}
@@ -45,8 +42,7 @@ mysql:
 
 redis:
   namespace: infra
-  image: redis
-  tag: 6.2.12
+  image: redis:6.2.12
   nodeSelector: {} #redis: 'true'
   tolerations: {}
   affinity: {}
@@ -58,7 +54,7 @@ redis:
   port: 6379
 
 istio:
-  enable: true
+  enable: false
   ingressgateway:
     resources:
       limits:
@@ -72,6 +68,29 @@ istio:
       # requests:
       #   cpu: 500m
       #   memory: 2048Mi
+
+argo:
+  enable: true
+  namespace: kubeflow
+  piplineNamespace: pipeline
+  image: argoproj/workflow-controller:v3.4.3
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /healthz
+      port: 6060
+    initialDelaySeconds: 90
+    periodSeconds: 60
+    timeoutSeconds: 30
+  readinessProbe: {}
+  minio:
+    image: minio/minio:RELEASE.2023-04-20T17-56-55Z
+    root: minio
+    password: minio123
+    persistence:
+      enabled: true
+      storageClass: ""
+      size: 5Gi #500
 
 cube:
   namespace: infra
@@ -125,39 +144,3 @@ cube:
     resources: {}
     livenessProbe: {}
     readinessProbe: {}
-
-argo:
-  enable: true
-  namespace: kubeflow
-  image: argoproj/workflow-controller
-  tag: v3.4.3
-  imagePullPolicy: IfNotPresent
-  ## todo: args
-  args: {}
-  containerPort: 6060
-  livenessProbe:
-    failureThreshold: 3
-    httpGet:
-      path: /healthz
-      port: 6060
-    initialDelaySeconds: 90
-    periodSeconds: 60
-    timeoutSeconds: 30
-  readinessProbe: {}
-  minio:
-    image: minio/minio
-    tag: RELEASE.2023-04-20T17-56-55Z
-    imagePullPolicy: IfNotPresent
-    root: minio
-    password: minio123
-    persistence:
-      enabled: true
-      storageClass: ""
-      size: 500Gi
-
-kubeflow:
-
-volcano:
-
-monitor:
-# todo
