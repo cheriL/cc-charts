@@ -36,3 +36,9 @@ docker tag nvidia/k8s-device-plugin:v0.11.0-ubuntu20.04 $REGISTRY/nvidia/k8s-dev
 docker tag nvidia/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04 $REGISTRY/nvidia/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04
 docker push $REGISTRY/nvidia/k8s-device-plugin:v0.11.0-ubuntu20.04
 docker push $REGISTRY/nvidia/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04
+
+# cube
+docker tag ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard:2024.06.02 $REGISTRY/$PROJECT/kubeflow-dashboard:2024.06.02
+docker tag ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard-frontend:2024.06.02 $REGISTRY/$PROJECT/kubeflow-dashboard-frontend:2024.06.02
+docker push $REGISTRY/$PROJECT/kubeflow-dashboard:2024.06.02
+docker push $REGISTRY/$PROJECT/kubeflow-dashboard-frontend:2024.06.02

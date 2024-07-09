@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeflow-dashboard
+  namespace: {{ .Values.cube.namespace }}
+  labels:
+    app: kubeflow-dashboard
+spec:
+  replicas: {{ .Values.cube.backend.replicas }}
+  selector:
+    matchLabels:
+      app: kubeflow-dashboard
+  template:
+    metadata:
+      name: kubeflow-dashboard
+      labels:
+        app: kubeflow-dashboard
+    spec:
+      {{- with .Values.cube.imagePullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: kubeflow-dashboard
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.cube.backendImage }}"
+          imagePullPolicy: {{ .Values.cube.imagePullPolicy }}
+          command: ["bash","/entrypoint.sh"]
+          env:
+          - name: STAGE
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: STAGE
+
+          - name: REDIS_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: REDIS_HOST
+          - name: REDIS_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: REDIS_PORT
+          - name: REDIS_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: REDIS_PASSWORD
+          - name: MYSQL_SERVICE
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: MYSQL_SERVICE
+          - name: ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: ENVIRONMENT
+          volumeMounts:
+            - name: kubeflow-dashboard-config
+              mountPath: /entrypoint.sh
+              subPath: entrypoint.sh
+            - name: kubeflow-dashboard-config
+              mountPath: /home/myapp/myapp/config.py
+              subPath: config.py
+            - name: kubeflow-dashboard-config
+              mountPath: /home/myapp/myapp/project.py
+              subPath: project.py
+            - name: tz-config
+              mountPath: /etc/localtime
+            - name: infra-kubeflow
+              mountPath: /data/k8s/kubeflow/
+            - name: kubernetes-config
+              mountPath: /home/myapp/kubeconfig
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          {{- if .Values.cube.backend.resources }}
+          resources:
+{{- toYaml .Values.cube.backend.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cube.backend.livenessProbe }}
+          livenessProbe:
+{{- toYaml .Values.cube.backend.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cube.backend.readinessProbe }}
+          readinessProbe:
+{{- toYaml .Values.cube.backend.readinessProbe | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: tz-config
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+        - name: kubeflow-dashboard-config
+          configMap:
+            name: kubeflow-dashboard-config
+            items:
+              - key: entrypoint.sh
+                path: entrypoint.sh
+              - key: config.py
+                path: config.py
+              - key: project.py
+                path: project.py
+        - name: kubernetes-config
+          configMap:
+            name: kubernetes-config
+        - name: infra-kubeflow
+          persistentVolumeClaim:
+            claimName: infra-kubeflow
+      serviceAccountName: kubeflow-dashboard
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeflow-dashboard
+  namespace: infra
+  labels:
+    app: kubeflow-dashboard
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.cube.backend.port }}
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: kubeflow-dashboard

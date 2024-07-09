@@ -1,0 +1,88 @@
+# encoding: utf-8
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeflow-dashboard-schedule
+  namespace: {{ .Values.cube.namespace }}
+  labels:
+    app: kubeflow-dashboard-schedule
+spec:
+  replicas: {{ .Values.cube.schedule.replicas }}
+  selector:
+    matchLabels:
+      app: kubeflow-dashboard-schedule
+  template:
+    metadata:
+      name: kubeflow-dashboard-schedule
+      labels:
+        app: kubeflow-dashboard-schedule
+    spec:
+      {{- with .Values.cube.imagePullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: kubeflow-dashboard-schedule
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.cube.backendImage }}"
+          imagePullPolicy: {{ .Values.cube.imagePullPolicy }}
+          command: ["bash","-c",'celery --app=myapp.tasks.celery_app:celery_app beat --loglevel=info']
+          env:
+          - name: REDIS_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: REDIS_HOST
+          - name: REDIS_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: REDIS_PORT
+          - name: REDIS_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: REDIS_PASSWORD
+          - name: MYSQL_SERVICE
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: MYSQL_SERVICE
+          - name: ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: deploy-config
+                key: ENVIRONMENT
+          volumeMounts:
+            - name: kubeflow-dashboard-config
+              mountPath: /entrypoint.sh
+              subPath: entrypoint.sh
+            - name: kubeflow-dashboard-config
+              mountPath: /home/myapp/myapp/config.py
+              subPath: config.py
+            - name: tz-config
+              mountPath: /etc/localtime
+          {{- if .Values.cube.schedule.resources }}
+          resources:
+{{- toYaml .Values.cube.schedule.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cube.schedule.livenessProbe }}
+          livenessProbe:
+{{- toYaml .Values.cube.schedule.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cube.schedule.readinessProbe }}
+          readinessProbe:
+{{- toYaml .Values.cube.schedule.readinessProbe | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: tz-config
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+        - name: kubeflow-dashboard-config
+          configMap:
+            name: kubeflow-dashboard-config
+            items:
+              - key: entrypoint.sh
+                path: entrypoint.sh
+              - key: config.py
+                path: config.py
+      serviceAccountName: kubeflow-dashboard

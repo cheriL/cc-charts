@@ -77,24 +77,120 @@ gpu:
 
 cube:
   namespace: infra
+  backendImage: kubeflow-dashboard:2024.06.02
+  frontendImage: kubeflow-dashboard-frontend:2024.06.02
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
   backend:
-    name: kubeflow-dashboard
     replicas: 1
-    image: kubeflow-dashboard:2024.03.01
-    imagePullPolicy: IfNotPresent
-    imagePullSecrets: []
-    resources: {}
-    livenessProbe: {}
+    port: 80
+    resources:
+      limits:
+        cpu: 10
+        memory: 10Gi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe:
+      failureThreshold: 2
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 500
+      periodSeconds: 60
+      timeoutSeconds: 10
     readinessProbe: {}
   frontend:
-    name: kubeflow-dashboard-frontend
     replicas: 1
-    image: kubeflow-dashboard-frontend:2024.03.01
-    imagePullPolicy: IfNotPresent
-    imagePullSecrets: []
-    resources: {}
+    port: 80
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
     livenessProbe: {}
     readinessProbe: {}
   schedule:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 6
+        memory: 6Gi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe: {}
+    readinessProbe:
+      failureThreshold: 1
+      exec:
+        command: ["bash","-c","python3 /home/myapp/myapp/tools/check_celery.py"]
+      initialDelaySeconds: 60
+      periodSeconds: 60
+      timeoutSeconds: 60
   watch:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 4
+        memory: 4Gi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe:
+      failureThreshold: 1
+      exec:
+        command: ["bash","-c","hour=`date +%H`; if [ $hour -eq 03 ]; then exit 1; fi"]
+      initialDelaySeconds: 3600
+      periodSeconds: 3600
+      timeoutSeconds: 3600
+    readinessProbe: {}
   worker:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 6
+        memory: 6Gi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe:
+      # failureThreshold: 1
+      # exec:
+      #   command: ["bash","-c","hour=`date +%H`; if [ $hour -eq 03 ]; then exit 1; fi"]
+      # initialDelaySeconds: 3600
+      # periodSeconds: 3600
+      # timeoutSeconds: 3600
+    readinessProbe: {}
+  persistence:
+    infraGlobal:
+      storageClass: ""
+      size: 1Gi #100Gi
+    infra:
+      storageClass: ""
+      size: 1Gi
+    automlWorkspace:
+      storageClass: ""
+      size: 1Gi #500Gi
+    automlArchives:
+      storageClass: ""
+      size: 1Gi #500Gi
+    jupyterWorkspace:
+      storageClass: ""
+      size: 1Gi #500Gi
+    jupyterArchives:
+      storageClass: ""
+      size: 1Gi #500Gi
+    pipelineGlobal:
+      storageClass: ""
+      size: 1Gi #100Gi
+    pipelineWorkspace:
+      storageClass: ""
+      size: 1Gi #500Gi
+    pipelineArchives:
+      storageClass: ""
+      size: 1Gi #500Gi
+    serviceWorkspace:
+      storageClass: ""
+      size: 1Gi #500Gi
+    serviceArchives:
+      storageClass: ""
+      size: 1Gi #500Gi
