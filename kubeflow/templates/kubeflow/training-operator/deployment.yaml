@@ -21,6 +21,7 @@ spec:
         - command:
             - /manager
           image: "{{ .Values.kubeflow.trainingOperator.image }}"
+          imagePullPolicy: IfNotPresent
           name: training-operator
           ports:
             - containerPort: 8080

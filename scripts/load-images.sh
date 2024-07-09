@@ -24,3 +24,9 @@ docker push $REGISTRY/minio/minio:RELEASE.2023-04-20T17-56-55Z
 # kubeflow
 docker tag kubeflow/training-operator:v1-855e096 $REGISTRY/kubeflow/training-operator:v1-855e096
 docker push $REGISTRY/kubeflow/training-operator:v1-855e096
+
+# volcano
+docker tag volcanosh/vc-controller-manager:v1.9.0 $REGISTRY/volcanosh/vc-controller-manager:v1.9.0
+docker tag volcanosh/vc-scheduler:v1.9.0 $REGISTRY/volcanosh/vc-scheduler:v1.9.0
+docker push $REGISTRY/volcanosh/vc-controller-manager:v1.9.0
+docker push $REGISTRY/volcanosh/vc-scheduler:v1.9.0
