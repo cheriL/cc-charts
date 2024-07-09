@@ -27,6 +27,7 @@ mysql:
     #           operator: In
     #           values:
     #           - "true"
+  resources: {}
   initContainer:
     - name: remove-lost-found
       image: busybox:1.36.0
@@ -41,6 +42,20 @@ mysql:
     enabled: true
     storageClass: ""
     size: 1Gi
+
+redis:
+  namespace: infra
+  image: redis
+  tag: 6.2.12
+  nodeSelector: {} #redis: 'true'
+  tolerations: {}
+  affinity: {}
+  resources:
+    requests:
+      cpu: 20m
+      memory: 128Mi #512
+  initContainer: {}
+  port: 6379
 
 cube:
   namespace: infra
@@ -94,10 +109,6 @@ cube:
     resources: {}
     livenessProbe: {}
     readinessProbe: {}
-
-
-redis:
-# todo
 
 argo:
   enable: true

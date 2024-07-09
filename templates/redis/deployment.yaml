@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: {{ .Values.redis.namespace }}
+  labels:
+    app: redis
+    component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+      component: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+        component: redis
+    spec:
+      {{- if .Values.redis.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.redis.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.redis.tolerations }}
+      tolerations:
+{{ toYaml .Values.redis.tolerations | indent 8 }}
+      {{- end }}
+      {{- if .Values.redis.affinity }}
+      affinity:
+{{ toYaml .Values.redis.affinity | indent 8 }}
+      {{- end }}
+      {{- with .Values.redis.pullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.redis.initContainers }}
+      initContainers:
+{{ toYaml .Values.redis.initContainers | indent 8 }}
+      {{- end }}
+      containers:
+        - name: redis
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.redis.image }}:{{ .Values.redis.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 6379
+            name: redis
+          env:
+            - name: REDIS_PASSWORD
+              value: admin
+            - name: REDIS_PORT
+              value: "6379"
+          {{- if .Values.redis.resources }}
+          resources:
+{{ toYaml .Values.redis.resources | indent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+      volumes:
+        - name: redis-data
+          emptyDir: {}

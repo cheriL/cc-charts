@@ -41,6 +41,7 @@ spec:
       containers:
         - name: mysql
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.mysql.image }}:{{ .Values.mysql.tag }}"
+          imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: data
               mountPath: /var/lib/mysql
@@ -60,6 +61,10 @@ spec:
             value: "true"
           - name: MYSQL_ROOT_PASSWORD
             value: admin
+          {{- if .Values.mysql.resources }}
+          resources:
+{{ toYaml .Values.mysql.resources | indent 12 }}
+          {{- end }}
       volumes:
         - name: data
           persistentVolumeClaim:
