@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: {{ .Values.mysql.namespace }}
+  labels:
+    app: mysql
+    component: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+      component: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+        component: mysql
+    spec:
+      {{- if .Values.mysql.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.mysql.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.mysql.tolerations }}
+      tolerations:
+{{ toYaml .Values.mysql.tolerations | indent 8 }}
+      {{- end }}
+      {{- if .Values.mysql.affinity }}
+      affinity:
+{{ toYaml .Values.mysql.affinity | indent 8 }}
+      {{- end }}
+      {{- with .Values.mysql.pullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.mysql.initContainers }}
+      initContainers:
+{{ toYaml .Values.mysql.initContainers | indent 8 }}
+      {{- end }}
+      containers:
+        - name: mysql
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.mysql.image }}:{{ .Values.mysql.tag }}"
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: mysql-configmap
+              mountPath: /etc/mysql/mysql.conf.d/mysqld.cnf
+              subPath: mysqld.cnf
+              readOnly: False
+            - name: mysql-configmap
+              mountPath: /docker-entrypoint-initdb.d/init.sql
+              subPath: init.sql
+              readOnly: False
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          env:
+          - name: MYSQL_ALLOW_EMPTY_PASSWORD
+            value: "true"
+          - name: MYSQL_ROOT_PASSWORD
+            value: admin
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: infra-mysql-pvc
+        - name: mysql-configmap
+          configMap:
+            name: mysql-configmap
+

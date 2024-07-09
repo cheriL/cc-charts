@@ -1,0 +1,29 @@
+---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: infra-mysql-pv
+#   labels:
+#     infra-pvname: infra-mysql-pv
+# spec:
+#   capacity:       
+#     storage: {{ .Values.mysql.persistence.size }}
+#   accessModes:   
+#     - ReadWriteMany
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: {{ .Values.mysql.persistence.storageClass | default .Values.global.storageClass }}
+#   volumeMode: Filesystem
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: infra-mysql-pvc
+  namespace: infra
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mysql.persistence.size }}
+  #volumeName: infra-mysql-pv
+  storageClassName: {{ .Values.mysql.persistence.storageClass | default .Values.global.storageClass }}
