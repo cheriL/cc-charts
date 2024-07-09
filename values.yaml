@@ -1,98 +1,139 @@
-# Default values for cc-charts.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+global:
+  # -- Global Docker image registry.
+  imageRegistry: "10.20.2.3:5000/cube-studio"
+  # -- Global Docker registry secret names as an array.
+  imagePullSecrets: []
+  # -- Global storageClass for Persistent Volume(s).
+  storageClass: "local-path"
+  # istio ?
+  host: "*"
 
-replicaCount: 1
+mysql:
+  # enable: true
+  name: mysql
+  namespace: infra
+   # -- Image repository
+  image: mysql
+  # -- Image tag
+  tag: 8.0.32
+  nodeSelector: {}
+  tolerations: {}
+  affinity: {}
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #         - key: mysql
+    #           operator: In
+    #           values:
+    #           - "true"
+  initContainer:
+    - name: remove-lost-found
+      image: busybox:1.36.0
+      imagePullPolicy: IfNotPresent
+      command: ["rm", "-rf", "/var/lib/mysql/lost+found"]
+      volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+  # service port
+  port: 3306
+  persistence:
+    enabled: true
+    storageClass: ""
+    size: 1Gi
 
-image:
-  repository: nginx
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+cube:
+  namespace: infra
+  backend:
+    name: kubeflow-dashboard
+    replicas: 1
+    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
+    tag: 2024.03.01
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    resources: {}
+    livenessProbe: {}
+    readinessProbe: {}
+  frontend:
+    name: kubeflow-dashboard-frontend
+    replicas: 1
+    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard-frontend
+    tag: 2024.03.01
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    resources: {}
+    livenessProbe: {}
+    readinessProbe: {}
+  schedule:
+    name: kubeflow-dashboard-schedule
+    replicas: 1
+    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
+    tag: 2024.03.01
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    resources: {}
+    livenessProbe: {}
+    readinessProbe: {}
+  watch:
+    name: kubeflow-watch
+    replicas: 1
+    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
+    tag: 2024.03.01
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    resources: {}
+    livenessProbe: {}
+    readinessProbe: {}
+  worker:
+    name: kubeflow-dashboard-worker
+    replicas: 1
+    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
+    tag: 2024.03.01
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    resources: {}
+    livenessProbe: {}
+    readinessProbe: {}
 
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+redis:
+# todo
 
-podAnnotations: {}
-podLabels: {}
+argo:
+  enable: true
+  namespace: kubeflow
+  image: argoproj/workflow-controller
+  tag: v3.4.3
+  imagePullPolicy: IfNotPresent
+  ## todo: args
+  args: {}
+  containerPort: 6060
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: /healthz
+      port: 6060
+    initialDelaySeconds: 90
+    periodSeconds: 60
+    timeoutSeconds: 30
+  readinessProbe: {}
+  minio:
+    image: minio/minio
+    tag: RELEASE.2023-04-20T17-56-55Z
+    imagePullPolicy: IfNotPresent
+    root: minio
+    password: minio123
+    persistence:
+      enabled: true
+      storageClass: ""
+      size: 500Gi
 
-podSecurityContext: {}
-  # fsGroup: 2000
+kubeflow:
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+volcano:
 
-service:
-  type: ClusterIP
-  port: 80
+istio:
+  enable: true
 
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-# Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
-
-# Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+monitor:
+# todo
