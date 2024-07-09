@@ -5,8 +5,8 @@ global:
   imagePullSecrets: []
   # -- Global storageClass for Persistent Volume(s).
   storageClass: "local-path"
-  # istio ?
-  host: "*"
+
+host: "*"
 
 mysql:
   # enable: true
@@ -56,6 +56,22 @@ redis:
       memory: 128Mi #512
   initContainer: {}
   port: 6379
+
+istio:
+  enable: true
+  ingressgateway:
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  istiod:
+    resources: {}
+      # requests:
+      #   cpu: 500m
+      #   memory: 2048Mi
 
 cube:
   namespace: infra
@@ -142,9 +158,6 @@ argo:
 kubeflow:
 
 volcano:
-
-istio:
-  enable: true
 
 monitor:
 # todo
