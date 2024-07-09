@@ -30,3 +30,9 @@ docker tag volcanosh/vc-controller-manager:v1.9.0 $REGISTRY/volcanosh/vc-control
 docker tag volcanosh/vc-scheduler:v1.9.0 $REGISTRY/volcanosh/vc-scheduler:v1.9.0
 docker push $REGISTRY/volcanosh/vc-controller-manager:v1.9.0
 docker push $REGISTRY/volcanosh/vc-scheduler:v1.9.0
+
+# nvidia
+docker tag nvidia/k8s-device-plugin:v0.11.0-ubuntu20.04 $REGISTRY/nvidia/k8s-device-plugin:v0.11.0-ubuntu20.04
+docker tag nvidia/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04 $REGISTRY/nvidia/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04
+docker push $REGISTRY/nvidia/k8s-device-plugin:v0.11.0-ubuntu20.04
+docker push $REGISTRY/nvidia/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04
