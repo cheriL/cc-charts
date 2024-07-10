@@ -9,6 +9,7 @@
 | training-operator | kubeflow     | v1-855e096 | 1.7.0:manifests                   |
 | volcano           | kubeflow     | v1.9.0     | release-1.9:installer             |
 
+cube-studio: 96871ad
 
 ```
 kubectl delete configmap kubernetes-config -n infra
