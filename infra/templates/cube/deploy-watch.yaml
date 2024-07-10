@@ -17,6 +17,18 @@ spec:
       labels:
         app: kubeflow-watch
     spec:
+      {{- if .Values.mysql.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.mysql.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.mysql.tolerations }}
+      tolerations:
+{{ toYaml .Values.mysql.tolerations | indent 8 }}
+      {{- end }}
+      {{- if .Values.mysql.affinity }}
+      affinity:
+{{ toYaml .Values.mysql.affinity | indent 8 }}
+      {{- end }}
       {{- with .Values.cube.imagePullSecrets | default .Values.global.imagePullSecrets }}
       imagePullSecrets:
 {{- toYaml . | nindent 8 }}
@@ -26,7 +38,7 @@ spec:
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.cube.backendImage }}"
           imagePullPolicy: {{ .Values.cube.imagePullPolicy }}
           workingDir: /home/myapp
-          command: ["bash","myapp/tools/start.sh"]
+          command: ["supervisord", "-c", "/home/myapp/myapp/tools/supervisord.conf"]
           env:
           - name: REDIS_HOST
             valueFrom:

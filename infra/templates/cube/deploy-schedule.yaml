@@ -17,6 +17,18 @@ spec:
       labels:
         app: kubeflow-dashboard-schedule
     spec:
+      {{- if .Values.mysql.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.mysql.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.mysql.tolerations }}
+      tolerations:
+{{ toYaml .Values.mysql.tolerations | indent 8 }}
+      {{- end }}
+      {{- if .Values.mysql.affinity }}
+      affinity:
+{{ toYaml .Values.mysql.affinity | indent 8 }}
+      {{- end }}
       {{- with .Values.cube.imagePullSecrets | default .Values.global.imagePullSecrets }}
       imagePullSecrets:
 {{- toYaml . | nindent 8 }}

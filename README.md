@@ -18,8 +18,8 @@ kubectl create configmap kubernetes-config --from-file=kubeconfig -n pipeline
 kubectl delete configmap kubernetes-config -n automl
 kubectl create configmap kubernetes-config --from-file=kubeconfig -n automl
 
-helm install infra ./infra
-helm install kubeflow ./kubeflow
+helm install infra ./infra --namespace=infra
+helm install kubeflow ./kubeflow --namespace=kubeflow
 helm install volcano ./volcano --namespace=kubeflow
 helm install monitor ./monitor
 ```

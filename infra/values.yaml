@@ -81,6 +81,17 @@ cube:
   frontendImage: kubeflow-dashboard-frontend:2024.06.02
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
+  nodeSelector: {}
+  tolerations: {}
+  affinity:
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #     - matchExpressions:
+    #       - key: kubeflow-dashboard
+    #         operator: In
+    #         values:
+    #          - "true"
   backend:
     replicas: 1
     port: 80
