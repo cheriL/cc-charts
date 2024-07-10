@@ -1,6 +1,6 @@
 global:
   # -- Global Docker image registry.
-  imageRegistry: "10.20.2.3:5000/cube-studio"
+  imageRegistry: "10.20.2.3:5000"
   # -- Global Docker registry secret names as an array.
   imagePullSecrets: []
   # -- Global storageClass for Persistent Volume(s).
