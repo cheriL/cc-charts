@@ -17,17 +17,17 @@ spec:
       labels:
         app: kubeflow-watch
     spec:
-      {{- if .Values.mysql.nodeSelector }}
+      {{- if .Values.cube.nodeSelector }}
       nodeSelector:
-{{ toYaml .Values.mysql.nodeSelector | indent 8 }}
+{{ toYaml .Values.cube.nodeSelector | indent 8 }}
       {{- end }}
-      {{- if .Values.mysql.tolerations }}
+      {{- if .Values.cube.tolerations }}
       tolerations:
-{{ toYaml .Values.mysql.tolerations | indent 8 }}
+{{ toYaml .Values.cube.tolerations | indent 8 }}
       {{- end }}
-      {{- if .Values.mysql.affinity }}
+      {{- if .Values.cube.affinity }}
       affinity:
-{{ toYaml .Values.mysql.affinity | indent 8 }}
+{{ toYaml .Values.cube.affinity | indent 8 }}
       {{- end }}
       {{- with .Values.cube.imagePullSecrets | default .Values.global.imagePullSecrets }}
       imagePullSecrets:
