@@ -1,6 +1,6 @@
 global:
   # -- Global Docker image registry.
-  imageRegistry: "10.20.2.3:5000/cube-studio"
+  imageRegistry: "10.20.2.3:5000"
   # -- Global Docker registry secret names as an array.
   imagePullSecrets: []
   # -- Global storageClass for Persistent Volume(s).
@@ -10,9 +10,8 @@ host: "*"
 
 mysql:
   # enable: true
-  name: mysql
   namespace: infra
-  image: mysql:8.0.32
+  image: cube-studio/mysql:8.0.32
   nodeSelector: {}
   tolerations: {}
   affinity: {}
@@ -42,7 +41,7 @@ mysql:
 
 redis:
   namespace: infra
-  image: redis:6.2.12
+  image: cube-studio/redis:6.2.12
   nodeSelector: {} #redis: 'true'
   tolerations: {}
   affinity: {}
@@ -77,8 +76,8 @@ gpu:
 
 cube:
   namespace: infra
-  backendImage: kubeflow-dashboard:2024.06.02
-  frontendImage: kubeflow-dashboard-frontend:2024.06.02
+  backendImage: cube-studio/kubeflow-dashboard:2024.06.02
+  frontendImage: cube-studio/kubeflow-dashboard-frontend:2024.06.02
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   nodeSelector: {}
