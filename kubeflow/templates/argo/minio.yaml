@@ -1,0 +1,120 @@
+{{ if .Values.argo.enable }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: minio
+  name: minio
+  namespace: {{ .Values.argo.namespace }}
+spec:
+  ports:
+  - name: api
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  - name: dashboard
+    port: 9001
+    protocol: TCP
+    targetPort: 9001
+  selector:
+    app: minio
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: minio
+  name: minio
+  namespace: {{ .Values.argo.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+      - args:
+        - server
+        - /data
+        - --console-address
+        - :9001
+        env:
+        - name: MINIO_ROOT_USER
+          value: {{ .Values.argo.minio.root }}
+        - name: MINIO_ROOT_PASSWORD
+          value: {{ .Values.argo.minio.password }}
+        image: "{{ .Values.argo.minio.image }}"
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+          - name: data
+            mountPath: /data
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - mkdir
+              - -p
+              - /data/mlpipeline
+        livenessProbe:
+          httpGet:
+            path: /minio/health/live
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        name: main
+        ports:
+        - containerPort: 9000
+          name: api
+        - containerPort: 9001
+          name: dashboard
+        readinessProbe:
+          httpGet:
+            path: /minio/health/ready
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-pvc
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kubeflow-minio-pv
+  labels:
+    kubeflow-pvname: kubeflow-minio-pv
+spec:
+  capacity:       
+    storage: {{ .Values.argo.minio.persistence.size }}
+  accessModes:
+    - ReadWriteOnce   
+  hostPath:
+    path: /data/k8s/kubeflow/minio
+  persistentVolumeReclaimPolicy: Retain
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: minio-pvc
+  namespace: kubeflow
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.argo.minio.persistence.size }}
+#  selector:
+#    matchLabels:
+#      kubeflow-pvname: kubeflow-minio-pv
+  volumeName: kubeflow-minio-pv
+  storageClassName: ""
+
+---
+{{- end }}

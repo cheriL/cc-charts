@@ -1,0 +1,207 @@
+global:
+  # -- Global Docker image registry.
+  imageRegistry: "10.20.2.3:5000/cube-studio"
+  # -- Global Docker registry secret names as an array.
+  imagePullSecrets: []
+  # -- Global storageClass for Persistent Volume(s).
+  storageClass: "local-path"
+
+host: "*"
+
+mysql:
+  # enable: true
+  name: mysql
+  namespace: infra
+  image: mysql:8.0.32
+  nodeSelector: {}
+  tolerations: {}
+  affinity: {}
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #       - matchExpressions:
+    #         - key: mysql
+    #           operator: In
+    #           values:
+    #           - "true"
+  resources: {}
+  initContainer:
+    - name: remove-lost-found
+      image: busybox:1.36.0
+      imagePullPolicy: IfNotPresent
+      command: ["rm", "-rf", "/var/lib/mysql/lost+found"]
+      volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+  # service port
+  port: 3306
+  persistence:
+    enabled: true
+    storageClass: ""
+    size: 1Gi
+
+redis:
+  namespace: infra
+  image: redis:6.2.12
+  nodeSelector: {} #redis: 'true'
+  tolerations: {}
+  affinity: {}
+  resources:
+    requests:
+      cpu: 20m
+      memory: 128Mi #512
+  initContainer: {}
+  port: 6379
+
+istio:
+  enable: true
+  ingressgateway:
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  istiod:
+    resources: {}
+      # requests:
+      #   cpu: 500m
+      #   memory: 2048Mi
+
+gpu:
+  nvidia:
+    # todo: tolerations, affinity
+    devicePluginImage: nvidia/k8s-device-plugin:v0.11.0-ubuntu20.04
+    dcgmExporterImage: nvidia/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04
+
+cube:
+  namespace: infra
+  backendImage: kubeflow-dashboard:2024.06.02
+  frontendImage: kubeflow-dashboard-frontend:2024.06.02
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  nodeSelector: {}
+  tolerations: {}
+  affinity:
+    # nodeAffinity:
+    #   requiredDuringSchedulingIgnoredDuringExecution:
+    #     nodeSelectorTerms:
+    #     - matchExpressions:
+    #       - key: kubeflow-dashboard
+    #         operator: In
+    #         values:
+    #          - "true"
+  backend:
+    replicas: 1
+    port: 80
+    resources:
+      limits:
+        cpu: 10
+        memory: 10Gi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe:
+      failureThreshold: 2
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 500
+      periodSeconds: 60
+      timeoutSeconds: 10
+    readinessProbe: {}
+  frontend:
+    replicas: 1
+    port: 80
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe: {}
+    readinessProbe: {}
+  schedule:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 6
+        memory: 6Gi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe: {}
+    readinessProbe:
+      failureThreshold: 1
+      exec:
+        command: ["bash","-c","python3 /home/myapp/myapp/tools/check_celery.py"]
+      initialDelaySeconds: 60
+      periodSeconds: 60
+      timeoutSeconds: 60
+  watch:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 4
+        memory: 4Gi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe:
+      failureThreshold: 1
+      exec:
+        command: ["bash","-c","hour=`date +%H`; if [ $hour -eq 03 ]; then exit 1; fi"]
+      initialDelaySeconds: 3600
+      periodSeconds: 3600
+      timeoutSeconds: 3600
+    readinessProbe: {}
+  worker:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 6
+        memory: 6Gi
+      requests:
+        cpu: 10m
+        memory: 100Mi
+    livenessProbe:
+      # failureThreshold: 1
+      # exec:
+      #   command: ["bash","-c","hour=`date +%H`; if [ $hour -eq 03 ]; then exit 1; fi"]
+      # initialDelaySeconds: 3600
+      # periodSeconds: 3600
+      # timeoutSeconds: 3600
+    readinessProbe: {}
+  persistence:
+    infraGlobal:
+      storageClass: ""
+      size: 1Gi #100Gi
+    infra:
+      storageClass: ""
+      size: 1Gi
+    automlWorkspace:
+      storageClass: ""
+      size: 1Gi #500Gi
+    automlArchives:
+      storageClass: ""
+      size: 1Gi #500Gi
+    jupyterWorkspace:
+      storageClass: ""
+      size: 1Gi #500Gi
+    jupyterArchives:
+      storageClass: ""
+      size: 1Gi #500Gi
+    pipelineGlobal:
+      storageClass: ""
+      size: 1Gi #100Gi
+    pipelineWorkspace:
+      storageClass: ""
+      size: 1Gi #500Gi
+    pipelineArchives:
+      storageClass: ""
+      size: 1Gi #500Gi
+    serviceWorkspace:
+      storageClass: ""
+      size: 1Gi #500Gi
+    serviceArchives:
+      storageClass: ""
+      size: 1Gi #500Gi

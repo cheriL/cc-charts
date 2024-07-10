@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deploy-config
+  namespace: {{ .Values.cube.namespace }}
+data:
+  STAGE: "prod"
+  REDIS_HOST: "redis-master.{{ .Values.cube.namespace }}"
+  REDIS_PORT: "{{ .Values.redis.port }}"
+  REDIS_PASSWORD: "admin"
+  MYSQL_SERVICE: "mysql+pymysql://root:admin@mysql-service.{{ .Values.cube.namespace }}:{{ .Values.mysql.port }}/kubeflow?charset=utf8"
+  ENVIRONMENT: "DEV"

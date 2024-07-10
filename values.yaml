@@ -5,17 +5,14 @@ global:
   imagePullSecrets: []
   # -- Global storageClass for Persistent Volume(s).
   storageClass: "local-path"
-  # istio ?
-  host: "*"
+
+host: "*"
 
 mysql:
   # enable: true
   name: mysql
   namespace: infra
-   # -- Image repository
-  image: mysql
-  # -- Image tag
-  tag: 8.0.32
+  image: mysql:8.0.32
   nodeSelector: {}
   tolerations: {}
   affinity: {}
@@ -27,6 +24,7 @@ mysql:
     #           operator: In
     #           values:
     #           - "true"
+  resources: {}
   initContainer:
     - name: remove-lost-found
       image: busybox:1.36.0
@@ -42,72 +40,40 @@ mysql:
     storageClass: ""
     size: 1Gi
 
-cube:
-  namespace: infra
-  backend:
-    name: kubeflow-dashboard
-    replicas: 1
-    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
-    tag: 2024.03.01
-    imagePullPolicy: IfNotPresent
-    imagePullSecrets: []
-    resources: {}
-    livenessProbe: {}
-    readinessProbe: {}
-  frontend:
-    name: kubeflow-dashboard-frontend
-    replicas: 1
-    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard-frontend
-    tag: 2024.03.01
-    imagePullPolicy: IfNotPresent
-    imagePullSecrets: []
-    resources: {}
-    livenessProbe: {}
-    readinessProbe: {}
-  schedule:
-    name: kubeflow-dashboard-schedule
-    replicas: 1
-    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
-    tag: 2024.03.01
-    imagePullPolicy: IfNotPresent
-    imagePullSecrets: []
-    resources: {}
-    livenessProbe: {}
-    readinessProbe: {}
-  watch:
-    name: kubeflow-watch
-    replicas: 1
-    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
-    tag: 2024.03.01
-    imagePullPolicy: IfNotPresent
-    imagePullSecrets: []
-    resources: {}
-    livenessProbe: {}
-    readinessProbe: {}
-  worker:
-    name: kubeflow-dashboard-worker
-    replicas: 1
-    image: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard
-    tag: 2024.03.01
-    imagePullPolicy: IfNotPresent
-    imagePullSecrets: []
-    resources: {}
-    livenessProbe: {}
-    readinessProbe: {}
-
-
 redis:
-# todo
+  namespace: infra
+  image: redis:6.2.12
+  nodeSelector: {} #redis: 'true'
+  tolerations: {}
+  affinity: {}
+  resources:
+    requests:
+      cpu: 20m
+      memory: 128Mi #512
+  initContainer: {}
+  port: 6379
+
+istio:
+  enable: true
+  ingressgateway:
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  istiod:
+    resources: {}
+      # requests:
+      #   cpu: 500m
+      #   memory: 2048Mi
 
 argo:
   enable: true
   namespace: kubeflow
-  image: argoproj/workflow-controller
-  tag: v3.4.3
-  imagePullPolicy: IfNotPresent
-  ## todo: args
-  args: {}
-  containerPort: 6060
+  piplineNamespace: pipeline
+  image: argoproj/workflow-controller:v3.4.3
   livenessProbe:
     failureThreshold: 3
     httpGet:
@@ -118,22 +84,39 @@ argo:
     timeoutSeconds: 30
   readinessProbe: {}
   minio:
-    image: minio/minio
-    tag: RELEASE.2023-04-20T17-56-55Z
-    imagePullPolicy: IfNotPresent
+    image: minio/minio:RELEASE.2023-04-20T17-56-55Z
     root: minio
     password: minio123
     persistence:
       enabled: true
       storageClass: ""
-      size: 500Gi
+      size: 5Gi #500
 
 kubeflow:
+  namespace: kubeflow
+  trainingOperator:
+    image: kubeflow/training-operator:v1-855e096
 
-volcano:
-
-istio:
-  enable: true
-
-monitor:
-# todo
+cube:
+  namespace: infra
+  backend:
+    name: kubeflow-dashboard
+    replicas: 1
+    image: kubeflow-dashboard:2024.03.01
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    resources: {}
+    livenessProbe: {}
+    readinessProbe: {}
+  frontend:
+    name: kubeflow-dashboard-frontend
+    replicas: 1
+    image: kubeflow-dashboard-frontend:2024.03.01
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    resources: {}
+    livenessProbe: {}
+    readinessProbe: {}
+  schedule:
+  watch:
+  worker:

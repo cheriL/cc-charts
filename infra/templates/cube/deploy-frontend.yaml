@@ -1,0 +1,143 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-configmap
+  namespace: {{ .Values.cube.namespace }}
+  labels:
+    app: nginx
+data:
+  default.conf: |-
+    server {
+        listen       80;
+        server_name  localhost;
+        access_log  /data/log/nginx/access.log  main;
+        error_log   /data/log/nginx/error.log;
+
+        location = / {
+            rewrite ^(.*) $scheme://$http_host/frontend/ permanent;
+        }
+
+        # 静态资源
+        location /frontend/ {
+            root   /data/web;
+            index  index.html index.htm;
+            try_files $uri $uri/ /frontend/index.html;
+            if ($request_filename ~* .*\.html$) {
+              add_header Cache-Control "no-cache, no-store";
+            }
+        }
+
+        location / {
+            # 线上生产使用
+            proxy_pass http://kubeflow-dashboard.infra/;
+
+            proxy_http_version 1.1;
+            # 连接延时
+            proxy_connect_timeout 3600s;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+            # IP 穿透
+            # proxy_set_header        Host $proxy_host;
+            # proxy_set_header Host       $host;
+            proxy_set_header Host       $http_host;
+            proxy_set_header        X-Real-IP $remote_addr;
+            proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+            # WebSocket 穿透
+            proxy_set_header Origin "";
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+
+        }
+
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubeflow-dashboard-frontend
+  namespace: {{ .Values.cube.namespace }}
+  labels:
+    app: kubeflow-dashboard-frontend
+spec:
+  replicas: {{ .Values.cube.frontend.replicas }}
+  selector:
+    matchLabels:
+      app: kubeflow-dashboard-frontend
+  template:
+    metadata:
+      name: kubeflow-dashboard-frontend
+      labels:
+        app: kubeflow-dashboard-frontend
+    spec:
+      {{- if .Values.cube.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.cube.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.cube.tolerations }}
+      tolerations:
+{{ toYaml .Values.cube.tolerations | indent 8 }}
+      {{- end }}
+      {{- if .Values.cube.affinity }}
+      affinity:
+{{ toYaml .Values.cube.affinity | indent 8 }}
+      {{- end }}
+      {{- with .Values.cube.imagePullSecrets | default .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+{{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: kubeflow-dashboard-frontend
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.cube.frontendImage }}"
+          imagePullPolicy: {{ .Values.cube.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          {{- if .Values.cube.frontend.resources }}
+          resources:
+{{- toYaml .Values.cube.frontend.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cube.frontend.livenessProbe }}
+          livenessProbe:
+{{- toYaml .Values.cube.frontend.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.cube.frontend.readinessProbe }}
+          readinessProbe:
+{{- toYaml .Values.cube.frontend.readinessProbe | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: nginx-configmap
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+      volumes:
+        - name: tz-config
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+        - name: nginx-configmap
+          configMap:
+            name: nginx-configmap
+            items:
+              - key: default.conf
+                path: default.conf
+      serviceAccountName: kubeflow-dashboard
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeflow-dashboard-frontend
+  namespace: {{ .Values.cube.namespace }}
+  labels:
+    app: kubeflow-dashboard-frontend
+spec:
+  ports:
+    - name: http
+      port: {{ .Values.cube.frontend.port }}
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app: kubeflow-dashboard-frontend
+
