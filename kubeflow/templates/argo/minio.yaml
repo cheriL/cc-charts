@@ -47,7 +47,7 @@ spec:
           value: {{ .Values.argo.minio.root }}
         - name: MINIO_ROOT_PASSWORD
           value: {{ .Values.argo.minio.password }}
-        image: "{{ .Values.argo.minio.image }}"
+        image: {{ .Values.argo.minio.image }}
         imagePullPolicy: IfNotPresent
         volumeMounts:
           - name: data

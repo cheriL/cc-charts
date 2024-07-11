@@ -89,7 +89,7 @@ spec:
       {{- end }}
       containers:
         - name: kubeflow-dashboard-frontend
-          image: "{{ .Values.global.imageRegistry }}/{{ .Values.cube.frontendImage }}"
+          image: {{ .Values.cube.frontendImage }}
           imagePullPolicy: {{ .Values.cube.imagePullPolicy }}
           ports:
             - name: http

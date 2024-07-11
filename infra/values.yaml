@@ -1,6 +1,4 @@
 global:
-  # -- Global Docker image registry.
-  imageRegistry: "10.20.2.3:5000"
   # -- Global Docker registry secret names as an array.
   imagePullSecrets: []
   # -- Global storageClass for Persistent Volume(s).
@@ -9,12 +7,11 @@ global:
 host: "*"
 
 mysql:
-  # enable: true
   namespace: infra
-  image: cube-studio/mysql:8.0.32
+  image: mysql:8.0.32
   nodeSelector: {}
   tolerations: {}
-  affinity: {}
+  affinity:
     # nodeAffinity:
     #   requiredDuringSchedulingIgnoredDuringExecution:
     #     nodeSelectorTerms:
@@ -41,7 +38,7 @@ mysql:
 
 redis:
   namespace: infra
-  image: cube-studio/redis:6.2.12
+  image: bitnami/redis:6.2.12
   nodeSelector: {} #redis: 'true'
   tolerations: {}
   affinity: {}
@@ -54,6 +51,8 @@ redis:
 
 istio:
   enable: true
+  istiodImage: istio/pilot:1.22.2
+  proxyImage: istio/proxyv2:1.22.2
   ingressgateway:
     resources:
       limits:
@@ -70,14 +69,15 @@ istio:
 
 gpu:
   nvidia:
+    enable: false
     # todo: tolerations, affinity
     devicePluginImage: nvidia/k8s-device-plugin:v0.11.0-ubuntu20.04
     dcgmExporterImage: nvidia/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04
 
 cube:
   namespace: infra
-  backendImage: cube-studio/kubeflow-dashboard:2024.06.02
-  frontendImage: cube-studio/kubeflow-dashboard-frontend:2024.06.02
+  backendImage: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard:2024.06.02
+  frontendImage: ccr.ccs.tencentyun.com/cube-studio/kubeflow-dashboard-frontend:2024.06.02
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
   nodeSelector: {}

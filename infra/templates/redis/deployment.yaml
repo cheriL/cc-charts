@@ -40,7 +40,7 @@ spec:
       {{- end }}
       containers:
         - name: redis
-          image: "{{ .Values.global.imageRegistry }}/{{ .Values.redis.image }}"
+          image: {{ .Values.redis.image }}
           imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 6379

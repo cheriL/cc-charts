@@ -35,7 +35,7 @@ spec:
       {{- end }}
       containers:
         - name: kubeflow-dashboard-worker
-          image: "{{ .Values.global.imageRegistry }}/{{ .Values.cube.backendImage }}"
+          image: {{ .Values.cube.backendImage }}
           imagePullPolicy: {{ .Values.cube.imagePullPolicy }}
           command: ["bash","-c",'celery --app=myapp.tasks.celery_app:celery_app worker --loglevel=info --pool=prefork -Ofair -c 20 -n worker@%h']
           env:

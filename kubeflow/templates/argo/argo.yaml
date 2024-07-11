@@ -20,14 +20,14 @@ spec:
         - workflow-controller
         args:
           - '--executor-image'
-          - argoproj/argoexec:v3.4.3
+          - {{ .Values.argo.executorImage }}
         env:
         - name: LEADER_ELECTION_IDENTITY
           valueFrom:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.name
-        image: "{{ .Values.argo.image }}"
+        image: {{ .Values.argo.image }}
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9090

@@ -1,3 +1,5 @@
+{{ if .Values.gpu.nvidia.enable }}
+
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -76,3 +78,5 @@ spec:
   ports:
   - name: "metrics"
     port: 9400
+
+{{- end }}

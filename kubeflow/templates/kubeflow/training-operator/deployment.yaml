@@ -20,7 +20,7 @@ spec:
       containers:
         - command:
             - /manager
-          image: "{{ .Values.kubeflow.trainingOperator.image }}"
+          image: {{ .Values.kubeflow.trainingOperator.image }}
           imagePullPolicy: IfNotPresent
           name: training-operator
           ports:

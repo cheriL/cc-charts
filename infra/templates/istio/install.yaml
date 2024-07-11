@@ -732,7 +732,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: docker.io/istio/proxyv2:1.22.2
+        image: {{ .Values.istio.proxyImage }}
         name: istio-proxy
         ports:
         - containerPort: 15021
@@ -922,7 +922,7 @@ spec:
               resource: limits.cpu
         - name: PLATFORM
           value: ""
-        image: docker.io/istio/pilot:1.22.2
+        image: {{ .Values.istio.istiodImage }}
         name: discovery
         ports:
         - containerPort: 8080
