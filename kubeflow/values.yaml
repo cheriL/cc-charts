@@ -1,6 +1,4 @@
 global:
-  # -- Global Docker image registry.
-  imageRegistry: "10.20.2.3:5000"
   # -- Global Docker registry secret names as an array.
   imagePullSecrets: []
   # -- Global storageClass for Persistent Volume(s).
@@ -11,6 +9,7 @@ argo:
   namespace: kubeflow
   piplineNamespace: pipeline
   image: argoproj/workflow-controller:v3.4.3
+  executorImage: argoproj/argoexec:v3.4.3
   livenessProbe:
     failureThreshold: 3
     httpGet:

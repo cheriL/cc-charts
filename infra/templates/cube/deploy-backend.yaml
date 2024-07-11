@@ -34,7 +34,7 @@ spec:
       {{- end }}
       containers:
         - name: kubeflow-dashboard
-          image: "{{ .Values.global.imageRegistry }}/{{ .Values.cube.backendImage }}"
+          image: {{ .Values.cube.backendImage }}
           imagePullPolicy: {{ .Values.cube.imagePullPolicy }}
           command: ["bash","/entrypoint.sh"]
           env:
