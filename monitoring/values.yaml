@@ -1,0 +1,24 @@
+global:
+  # -- Global Docker image registry.
+  imageRegistry: "10.20.2.3:5000/cube-studio"
+  # -- Global Docker registry secret names as an array.
+  imagePullSecrets: []
+  # -- Global storageClass for Persistent Volume(s).
+  storageClass: "local-path"
+
+operator:
+  replicas: 1
+  namespace: monitoring
+  image: quay.io/prometheus-operator/prometheus-operator:v0.46.0
+  reloader: quay.io/prometheus-operator/prometheus-config-reloader:v0.46.0
+  nodeSelector:
+    # monitoring: 'true'
+  tolerations: {}
+  affinity: {}
+  resources:
+    # limits:
+    #   cpu: 200m
+    #   memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
